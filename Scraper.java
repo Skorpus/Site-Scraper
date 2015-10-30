@@ -42,7 +42,9 @@ public class Scraper {
 					String line;
 					// Need .* as can have any number of characters in front
 					// We know links will be of the form <a href="...">
-					String linkPattern = "(.*)([hH][rR][eE][fF])=\"(.+)\"";
+					// Use the *? to be non-greedy(reluctant) hence only goes to
+					// first match
+					String linkPattern = "(.*)([hH][rR][eE][fF])=\"(.*?)\"";
 					// Pattern is a nice class that compiles the REGEX
 					Pattern pattern = Pattern.compile(linkPattern);
 
@@ -58,7 +60,11 @@ public class Scraper {
 							String output = line.substring(matcher.start(), matcher.end());
 							// Still not there yet, need to split the string and
 							// get the url
-							output = output.split("\"")[1];
+							// System.out.println(output);
+							output = output.split("href=\"")[1];
+							// Just need to remove trailing \"
+							output = output.substring(0, output.length() - 1);
+							// System.out.println(output);
 							// Next we want to put this into a set
 							allLinks.add(output);
 							// System.out.println("Added to set");
