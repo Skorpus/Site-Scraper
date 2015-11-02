@@ -13,7 +13,8 @@ public class Scraper {
 	private URL scrapeURL;
 	private BufferedReader reader;
 	private Set<String> allLinks;
-	private volatile boolean isComplete = false;
+	// Make this instance variable so won't read until thread is complete
+	private Thread contentThread;
 
 	Scraper(String url) {
 		allLinks = new LinkedHashSet<String>();
@@ -29,11 +30,11 @@ public class Scraper {
 
 	public void getContent() {
 		// Grab the content in a new thread
-		Thread contentThread = new Thread(new Runnable() {
+		contentThread = new Thread(new Runnable() {
 			@Override
 			public void run() {
 				// Collect the data from the URL
-				isComplete = false;
+
 				try {
 					// Have a reader that takes in the input of the URL
 					reader = new BufferedReader(new InputStreamReader(scrapeURL.openStream()));
@@ -42,9 +43,13 @@ public class Scraper {
 					String line;
 					// Need .* as can have any number of characters in front
 					// We know links will be of the form <a href="...">
+<<<<<<< HEAD
+					String linkPattern = "(.*)([hH][rR][eE][fF])=\"(.+?)\"";
+=======
 					// Use the *? to be non-greedy(reluctant) hence only goes to
 					// first match
 					String linkPattern = "(.*)([hH][rR][eE][fF])=\"(.*?)\"";
+>>>>>>> master
 					// Pattern is a nice class that compiles the REGEX
 					Pattern pattern = Pattern.compile(linkPattern);
 
@@ -56,15 +61,22 @@ public class Scraper {
 						// pattern class, create the matcher using the pattern
 						Matcher matcher = pattern.matcher(line);
 						if (matcher.lookingAt()) {
+							// System.out.println(line);
 							// Get the substring so can just obtain the url
 							String output = line.substring(matcher.start(), matcher.end());
 							// Still not there yet, need to split the string and
 							// get the url
+<<<<<<< HEAD
+							output = output.split("href=\"")[1];
+							// And remove trailing \"
+							output = output.substring(0, output.length() - 1);
+=======
 							// System.out.println(output);
 							output = output.split("href=\"")[1];
 							// Just need to remove trailing \"
 							output = output.substring(0, output.length() - 1);
 							// System.out.println(output);
+>>>>>>> master
 							// Next we want to put this into a set
 							allLinks.add(output);
 							// System.out.println("Added to set");
@@ -75,7 +87,6 @@ public class Scraper {
 					// Tidy up after ourselves
 					reader.close();
 					// System.out.println("Here....");
-					isComplete = true;
 
 				} catch (IOException e) {
 					System.out.println("Error reading the page: " + e.getMessage());
@@ -92,18 +103,37 @@ public class Scraper {
 	 * @return set of all links
 	 */
 	public Set<String> getLinks() {
-		System.out.print("Fetching");
-		while (!isComplete) {
-			System.out.print(".");
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+		System.out.print("Fetching...");
+		// Wait for thread to complete
+		try {
+			contentThread.join();
+		} catch (InterruptedException e) {
+			System.out.println("Thread failed");
+			e.printStackTrace();
 		}
 		System.out.println("");
 		return allLinks;
+	}
+
+	/**
+	 * Filter all the links to only look for web links both internal and
+	 * external
+	 * 
+	 * @return set of web links
+	 */
+	public Set<String> getWebLinks() {
+		// Make regex for links
+		Pattern pattern = Pattern.compile("(.*).((html)|(php)|(htm)|(com))");
+		Set<String> result = new LinkedHashSet<String>();
+		for (String link : allLinks) {
+			// Check each of the links found
+			Matcher matcher = pattern.matcher(link);
+			if (matcher.lookingAt()) {
+				result.add(link);
+			}
+		}
+
+		return result;
 	}
 
 }

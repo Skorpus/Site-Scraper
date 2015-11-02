@@ -27,6 +27,8 @@ public class Driver {
 
 			// Print them all!!!
 			System.out.println(scraper.getLinks());
+
+			System.out.println(scraper.getWebLinks());
 		} else {
 			System.out.println("Please don't be ridiculous");
 		}
