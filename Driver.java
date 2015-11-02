@@ -29,8 +29,10 @@ public class Driver {
 			System.out.println(scraper.getLinks());
 
 			System.out.println(scraper.getWebLinks());
+
+			System.out.println(scraper.getExternalLinks());
 		} else {
-			System.out.println("Please don't be ridiculous");
+			System.out.println("Please don't be ridiculous, enter a proper URL");
 		}
 		in.close();
 
